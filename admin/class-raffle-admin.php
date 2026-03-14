@@ -33,6 +33,15 @@ class Raffle_Admin {
 
         add_submenu_page(
             'raffle-system',
+            'Dashboard',
+            'Dashboard',
+            'manage_options',
+            'raffle-dashboard',
+            array( $this, 'render_dashboard_page' )
+        );
+
+        add_submenu_page(
+            'raffle-system',
             'Crear Rifa',
             'Crear Rifa',
             'manage_options',
@@ -48,12 +57,35 @@ class Raffle_Admin {
         }
 
         wp_enqueue_media();
-        wp_enqueue_style( 'raffle-admin', RAFFLE_SYSTEM_URL . 'assets/css/admin.css', array(), RAFFLE_SYSTEM_VERSION );
+
+        // Google Fonts — Heebo (Dashmin)
+        wp_enqueue_style( 'raffle-google-fonts',
+            'https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap',
+            array(), null
+        );
+
+        // Font Awesome 5
+        wp_enqueue_style( 'raffle-fontawesome',
+            'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css',
+            array(), '5.15.4'
+        );
+
+        wp_enqueue_style( 'raffle-admin', RAFFLE_SYSTEM_URL . 'assets/css/admin.css', array( 'raffle-google-fonts', 'raffle-fontawesome' ), RAFFLE_SYSTEM_VERSION );
         wp_enqueue_script( 'raffle-admin', RAFFLE_SYSTEM_URL . 'assets/js/admin.js', array( 'jquery' ), RAFFLE_SYSTEM_VERSION, true );
         wp_localize_script( 'raffle-admin', 'raffleAdmin', array(
             'ajax_url'   => admin_url( 'admin-ajax.php' ),
             'draw_nonce' => wp_create_nonce( 'raffle_draw_nonce' ),
         ) );
+
+        // Dashboard page — Chart.js + dashboard.js
+        if ( strpos( $hook, 'raffle-dashboard' ) !== false ) {
+            wp_enqueue_script( 'chartjs', 'https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js', array(), '4.4.7', true );
+            wp_enqueue_script( 'raffle-dashboard', RAFFLE_SYSTEM_URL . 'assets/js/dashboard.js', array( 'jquery', 'chartjs' ), RAFFLE_SYSTEM_VERSION, true );
+            wp_localize_script( 'raffle-dashboard', 'raffleDashboard', array(
+                'ajax_url' => admin_url( 'admin-ajax.php' ),
+                'nonce'    => wp_create_nonce( 'raffle_analytics_nonce' ),
+            ) );
+        }
     }
 
     public function handle_form_submission() {
@@ -70,6 +102,7 @@ class Raffle_Admin {
         global $wpdb;
         $table = $wpdb->prefix . 'raffles';
 
+        // Base data from POST
         $data = array(
             'title'         => sanitize_text_field( wp_unslash( $_POST['title'] ?? '' ) ),
             'description'   => sanitize_textarea_field( wp_unslash( $_POST['description'] ?? '' ) ),
@@ -81,21 +114,35 @@ class Raffle_Admin {
             'status'        => sanitize_text_field( wp_unslash( $_POST['status'] ?? 'active' ) ),
         );
 
+        // Convert empty draw_date to NULL for DB compatibility
+        if ( empty( $data['draw_date'] ) ) {
+            $data['draw_date'] = null;
+        } else {
+            // Convert datetime-local format (T) to MySQL format
+            $data['draw_date'] = str_replace( 'T', ' ', $data['draw_date'] );
+            if ( strlen( $data['draw_date'] ) === 16 ) { // YYYY-MM-DD HH:MM
+                $data['draw_date'] .= ':00';
+            }
+        }
+
         // Packages
         $packages_raw = sanitize_text_field( wp_unslash( $_POST['packages'] ?? '' ) );
         $packages     = array_values( array_filter( array_map( 'absint', explode( ',', $packages_raw ) ) ) );
         $data['packages'] = wp_json_encode( $packages );
 
         $formats = array( '%s', '%s', '%f', '%s', '%d', '%f', '%s', '%s', '%s' );
-
         $raffle_id = isset( $_POST['raffle_id'] ) ? absint( $_POST['raffle_id'] ) : 0;
 
         if ( $raffle_id ) {
-            $wpdb->update( $table, $data, array( 'id' => $raffle_id ), $formats, array( '%d' ) );
+            $result = $wpdb->update( $table, $data, array( 'id' => $raffle_id ), $formats, array( '%d' ) );
         } else {
             $data['created_at'] = current_time( 'mysql' );
             $formats[]          = '%s';
-            $wpdb->insert( $table, $data, $formats );
+            $result = $wpdb->insert( $table, $data, $formats );
+        }
+
+        if ( false === $result ) {
+            wp_die( 'Error al guardar la rifa: ' . $wpdb->last_error );
         }
 
         wp_safe_redirect( admin_url( 'admin.php?page=raffle-system&message=saved' ) );
@@ -117,6 +164,10 @@ class Raffle_Admin {
         }
 
         include RAFFLE_SYSTEM_PATH . 'admin/views/raffle-list.php';
+    }
+
+    public function render_dashboard_page() {
+        include RAFFLE_SYSTEM_PATH . 'admin/views/dashboard.php';
     }
 
     public function render_form_page() {

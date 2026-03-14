@@ -72,12 +72,12 @@ raffle-system/
 
 ## Requisitos
 
-| Componente | Versión mínima |
-|---|---|
-| WordPress | 5.8+ |
-| PHP | 7.4+ |
-| WooCommerce | 7.0+ |
-| MySQL | 5.7+ |
+| Componente  | Versión mínima |
+| ----------- | -------------- |
+| WordPress   | 5.8+           |
+| PHP         | 7.4+           |
+| WooCommerce | 7.0+           |
+| MySQL       | 5.7+           |
 
 ## Licencia
 

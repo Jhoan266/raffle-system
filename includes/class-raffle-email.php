@@ -21,9 +21,8 @@ class Raffle_Email {
             return;
         }
 
-        $total_digits = strlen( (string) $raffle->total_tickets );
-        $formatted    = array_map( function ( $num ) use ( $total_digits ) {
-            return str_pad( $num, $total_digits, '0', STR_PAD_LEFT );
+        $formatted    = array_map( function ( $num ) use ( $raffle ) {
+            return Raffle_Tickets::format_ticket_number( $num, $raffle->total_tickets );
         }, $tickets );
 
         $to          = $purchase->buyer_email;

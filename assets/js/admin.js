@@ -13,11 +13,7 @@
     frame.on("select", function () {
       var attachment = frame.state().get("selection").first().toJSON();
       $("#prize_image").val(attachment.url);
-      $("#prize-image-preview").html(
-        '<img src="' +
-          attachment.url +
-          '" style="max-width:200px;display:block;margin-bottom:10px;">',
-      );
+      $("#prize-image-preview").html('<img src="' + attachment.url + '">');
       $("#remove-prize-image").show();
     });
 
@@ -27,7 +23,9 @@
   $("#remove-prize-image").on("click", function (e) {
     e.preventDefault();
     $("#prize_image").val("");
-    $("#prize-image-preview").html("");
+    $("#prize-image-preview").html(
+      '<i class="fas fa-image" style="font-size:32px;opacity:.3;"></i>',
+    );
     $(this).hide();
   });
 

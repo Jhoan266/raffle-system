@@ -26,6 +26,7 @@ require_once RAFFLE_SYSTEM_PATH . 'includes/class-raffle-email.php';
 require_once RAFFLE_SYSTEM_PATH . 'includes/class-raffle-duplicates.php';
 require_once RAFFLE_SYSTEM_PATH . 'includes/class-raffle-woocommerce.php';
 require_once RAFFLE_SYSTEM_PATH . 'admin/class-raffle-admin.php';
+require_once RAFFLE_SYSTEM_PATH . 'admin/class-raffle-analytics.php';
 require_once RAFFLE_SYSTEM_PATH . 'public/class-raffle-public.php';
 
 // Activation
@@ -34,6 +35,7 @@ register_activation_hook( __FILE__, array( 'Raffle_Activator', 'activate' ) );
 // Init
 add_action( 'plugins_loaded', function () {
     new Raffle_Admin();
+    new Raffle_Analytics();
     new Raffle_Public();
     new Raffle_Purchase();
     new Raffle_Draw();

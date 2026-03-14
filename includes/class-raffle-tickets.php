@@ -6,6 +6,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Raffle_Tickets {
 
     /**
+     * Formatea números de boleto con ceros a la izquierda según reglas de 3 o 4 dígitos.
+     */
+    public static function format_ticket_number($number, $total_tickets) {
+        $digits = ($total_tickets > 999) ? 4 : 3;
+        return str_pad($number, $digits, '0', STR_PAD_LEFT);
+    }
+
+    /**
      * Generate unique random ticket numbers for a purchase.
      *
      * Uses random_int() for cryptographically secure randomness.

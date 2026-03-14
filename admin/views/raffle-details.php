@@ -1,145 +1,211 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-$total_digits = strlen( (string) $raffle->total_tickets );
+$total_tickets = $raffle->total_tickets;
 $revenue      = $wpdb->get_var( $wpdb->prepare(
     "SELECT SUM(total_amount) FROM {$wpdb->prefix}raffle_purchases WHERE raffle_id = %d AND payment_status = 'completed'",
     $raffle->id
 ) );
 $remaining = $raffle->total_tickets - $raffle->sold_tickets;
 $progress  = ( $raffle->total_tickets > 0 ) ? round( ( $raffle->sold_tickets / $raffle->total_tickets ) * 100 ) : 0;
+$progress_class = 'blue';
+if ( $progress >= 100 ) { $progress_class = 'green'; }
+elseif ( $progress >= 75 ) { $progress_class = 'yellow'; }
 ?>
 
-<div class="wrap">
-    <h1>
-        <?php echo esc_html( $raffle->title ); ?>
-        <span class="raffle-status raffle-status--<?php echo esc_attr( $raffle->status ); ?>">
-            <?php echo $raffle->status === 'active' ? 'Activa' : 'Finalizada'; ?>
-        </span>
-    </h1>
+<div class="wrap rs-wrap">
+    <div class="rs-page-header">
+        <h1 class="rs-page-title">
+            <i class="fas fa-ticket-alt"></i>
+            <?php echo esc_html( $raffle->title ); ?>
+            <span class="rs-badge rs-badge-<?php echo esc_attr( $raffle->status ); ?>">
+                <?php echo $raffle->status === 'active' ? '● Activa' : '● Finalizada'; ?>
+            </span>
+        </h1>
+        <div class="rs-header-actions">
+            <a href="<?php echo esc_url( admin_url( 'admin.php?page=raffle-system' ) ); ?>" class="rs-btn rs-btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+            <a href="<?php echo esc_url( admin_url( "admin.php?page=raffle-system&action=edit&id={$raffle->id}" ) ); ?>" class="rs-btn rs-btn-primary">
+                <i class="fas fa-edit"></i> Editar
+            </a>
+        </div>
+    </div>
 
-    <a href="<?php echo esc_url( admin_url( 'admin.php?page=raffle-system' ) ); ?>" class="page-title-action">← Volver</a>
-    <a href="<?php echo esc_url( admin_url( "admin.php?page=raffle-system&action=edit&id={$raffle->id}" ) ); ?>" class="page-title-action">Editar</a>
-
-    <!-- Estadísticas -->
-    <div class="raffle-stats-grid">
-        <div class="raffle-stat-card">
-            <h3>Boletos Vendidos</h3>
-            <span class="raffle-stat-number"><?php echo esc_html( $raffle->sold_tickets ); ?> / <?php echo esc_html( $raffle->total_tickets ); ?></span>
-            <div class="raffle-progress-bar">
-                <div class="raffle-progress-fill" style="width:<?php echo esc_attr( $progress ); ?>%"></div>
+    <!-- Stats -->
+    <div class="rs-stats-grid">
+        <div class="rs-stat-card border-blue">
+            <div class="rs-stat-icon blue"><i class="fas fa-ticket-alt"></i></div>
+            <div class="rs-stat-body">
+                <div class="rs-stat-label">Boletos Vendidos</div>
+                <div class="rs-stat-number"><?php echo esc_html( $raffle->sold_tickets ); ?> / <?php echo esc_html( $raffle->total_tickets ); ?></div>
             </div>
         </div>
-        <div class="raffle-stat-card">
-            <h3>Boletos Restantes</h3>
-            <span class="raffle-stat-number"><?php echo esc_html( $remaining ); ?></span>
+        <div class="rs-stat-card border-orange">
+            <div class="rs-stat-icon orange"><i class="fas fa-layer-group"></i></div>
+            <div class="rs-stat-body">
+                <div class="rs-stat-label">Restantes</div>
+                <div class="rs-stat-number"><?php echo esc_html( $remaining ); ?></div>
+            </div>
         </div>
-        <div class="raffle-stat-card">
-            <h3>Dinero Recaudado</h3>
-            <span class="raffle-stat-number">$<?php echo esc_html( number_format( $revenue ?: 0, 2 ) ); ?></span>
+        <div class="rs-stat-card border-green">
+            <div class="rs-stat-icon green"><i class="fas fa-dollar-sign"></i></div>
+            <div class="rs-stat-body">
+                <div class="rs-stat-label">Recaudado</div>
+                <div class="rs-stat-number">$<?php echo esc_html( number_format( $revenue ?: 0, 0, ',', '.' ) ); ?></div>
+            </div>
         </div>
-        <div class="raffle-stat-card">
-            <h3>Fecha del Sorteo</h3>
-            <span class="raffle-stat-number" style="font-size:18px;">
-                <?php echo $raffle->draw_date ? esc_html( date_i18n( 'd/m/Y H:i', strtotime( $raffle->draw_date ) ) ) : '—'; ?>
-            </span>
+        <div class="rs-stat-card border-purple">
+            <div class="rs-stat-icon purple"><i class="fas fa-calendar-alt"></i></div>
+            <div class="rs-stat-body">
+                <div class="rs-stat-label">Fecha Sorteo</div>
+                <div class="rs-stat-number" style="font-size:16px;">
+                    <?php echo $raffle->draw_date ? esc_html( date_i18n( 'd/m/Y H:i', strtotime( $raffle->draw_date ) ) ) : '—'; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="rs-card">
+        <h3 class="rs-card-title"><i class="fas fa-chart-bar"></i> Progreso de Ventas</h3>
+        <div class="rs-progress rs-progress-lg">
+            <div class="rs-progress-fill <?php echo esc_attr( $progress_class ); ?>"
+                 style="width:<?php echo esc_attr( $progress ); ?>%;">
+                <?php echo esc_html( $progress ); ?>%
+            </div>
         </div>
     </div>
 
     <!-- Shortcode -->
-    <div class="raffle-shortcode-box">
-        <strong>Shortcode:</strong> <code>[raffle id="<?php echo esc_attr( $raffle->id ); ?>"]</code>
+    <div class="rs-shortcode-box">
+        <i class="fas fa-code"></i>
+        <strong>Shortcode:</strong>
+        <code>[raffle id="<?php echo esc_attr( $raffle->id ); ?>"]</code>
     </div>
 
-    <!-- Sorteo -->
-    <div class="raffle-draw-section">
-        <h2>Sorteo</h2>
-        <?php if ( $winner ) : ?>
-            <div class="raffle-winner-card">
-                <h3>🏆 Ganador</h3>
-                <p><strong>Nombre:</strong> <?php echo esc_html( $winner->buyer_name ); ?></p>
-                <p><strong>Email:</strong> <?php echo esc_html( $winner->buyer_email ); ?></p>
-                <p><strong>Boleto:</strong> #<?php echo esc_html( str_pad( $winner->ticket_number, $total_digits, '0', STR_PAD_LEFT ) ); ?></p>
+    <!-- Winner / Draw -->
+    <?php if ( $winner ) : ?>
+        <div class="rs-winner-banner">
+            <h3><i class="fas fa-trophy"></i> ¡Ganador Seleccionado!</h3>
+            <div class="rs-winner-info">
+            <div class="rs-winner-ticket">#<?php echo esc_html( Raffle_Tickets::format_ticket_number( $winner->ticket_number, $raffle->total_tickets ) ); ?></div>
+                <div class="rs-winner-detail">
+                    <small>Nombre</small>
+                    <strong><?php echo esc_html( $winner->buyer_name ); ?></strong>
+                </div>
+                <div class="rs-winner-detail">
+                    <small>Email</small>
+                    <strong><?php echo esc_html( $winner->buyer_email ); ?></strong>
+                </div>
             </div>
-        <?php elseif ( $raffle->sold_tickets > 0 ) : ?>
-            <button id="draw-winner-btn" class="button button-primary button-hero"
-                    data-raffle-id="<?php echo esc_attr( $raffle->id ); ?>">
-                🎲 Seleccionar Ganador
-            </button>
-            <div id="draw-result" style="display:none;"></div>
-        <?php else : ?>
-            <p>No se han vendido boletos aún. El sorteo estará disponible cuando haya ventas.</p>
-        <?php endif; ?>
-    </div>
+        </div>
+    <?php else : ?>
+        <div class="rs-card">
+            <h3 class="rs-card-title"><i class="fas fa-dice"></i> Sorteo</h3>
+            <?php if ( $raffle->sold_tickets > 0 ) : ?>
+                <button id="draw-winner-btn" class="rs-btn rs-btn-primary rs-btn-lg"
+                        data-raffle-id="<?php echo esc_attr( $raffle->id ); ?>">
+                    <i class="fas fa-random"></i> Seleccionar Ganador
+                </button>
+                <div id="draw-result" style="display:none;"></div>
+            <?php else : ?>
+                <p style="color:var(--rs-text-muted);">
+                    <i class="fas fa-info-circle"></i> No se han vendido boletos aún. El sorteo estará disponible cuando haya ventas.
+                </p>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
 
-    <!-- Detección de Duplicados -->
-    <div class="raffle-draw-section">
-        <h2>🔍 Control de Boletos Duplicados</h2>
-        <p class="description">
+    <!-- Duplicate Control -->
+    <div class="rs-card">
+        <h3 class="rs-card-title"><i class="fas fa-search"></i> Control de Boletos Duplicados</h3>
+        <p class="rs-help" style="margin-bottom:16px;">
             Si dos clientes compran al mismo tiempo, podría haber solapamiento mínimo.
             Usa estas herramientas para detectar y corregir cualquier duplicado.
         </p>
 
-        <div style="margin-top:15px;">
-            <label style="display:flex;align-items:center;gap:8px;margin-bottom:15px;">
+        <div style="margin-bottom:16px;">
+            <label class="rs-checkbox-label">
                 <input type="checkbox" id="raffle-auto-fix-toggle"
                        <?php checked( get_option( 'raffle_auto_fix_duplicates', '1' ), '1' ); ?>>
-                <strong>Corrección automática tras cada compra</strong>
-                <span class="description"> — El sistema comprobará y corregirá duplicados después de crear cada pedido.</span>
+                <div>
+                    <strong>Corrección automática tras cada compra</strong>
+                    <span class="rs-help" style="display:block;">El sistema comprobará y corregirá duplicados después de crear cada pedido.</span>
+                </div>
             </label>
         </div>
 
-        <button id="check-duplicates-btn" class="button"
-                data-raffle-id="<?php echo esc_attr( $raffle->id ); ?>">
-            🔎 Comprobar Duplicados
-        </button>
-        <button id="fix-duplicates-btn" class="button button-primary" style="display:none;"
-                data-raffle-id="<?php echo esc_attr( $raffle->id ); ?>">
-            🔧 Corregir Duplicados
-        </button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button id="check-duplicates-btn" class="rs-btn rs-btn-secondary"
+                    data-raffle-id="<?php echo esc_attr( $raffle->id ); ?>">
+                <i class="fas fa-search"></i> Comprobar Duplicados
+            </button>
+            <button id="fix-duplicates-btn" class="rs-btn rs-btn-primary" style="display:none;"
+                    data-raffle-id="<?php echo esc_attr( $raffle->id ); ?>">
+                <i class="fas fa-wrench"></i> Corregir Duplicados
+            </button>
+        </div>
         <div id="duplicates-result" style="margin-top:15px;"></div>
     </div>
 
-    <!-- Compradores -->
-    <h2>Compradores (<?php echo count( $purchases ); ?>)</h2>
-    <table class="wp-list-table widefat fixed striped">
-        <thead>
-            <tr>
-                <th style="width:50px;">ID</th>
-                <th>Nombre</th>
-                <th>Email</th>
-                <th>Boletos</th>
-                <th>Total</th>
-                <th>Estado</th>
-                <th>Fecha</th>
-                <th>Números</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if ( empty( $purchases ) ) : ?>
-                <tr><td colspan="8">No hay compras registradas.</td></tr>
-            <?php else : ?>
-                <?php foreach ( $purchases as $p ) :
-                    $tickets = $wpdb->get_col( $wpdb->prepare(
-                        "SELECT ticket_number FROM {$wpdb->prefix}raffle_tickets WHERE purchase_id = %d ORDER BY ticket_number",
-                        $p->id
-                    ) );
-                    $formatted = array_map( function ( $n ) use ( $total_digits ) {
-                        return str_pad( $n, $total_digits, '0', STR_PAD_LEFT );
-                    }, $tickets );
-                ?>
+    <!-- Purchases Table -->
+    <div class="rs-card">
+        <h3 class="rs-card-title"><i class="fas fa-users"></i> Compradores (<?php echo count( $purchases ); ?>)</h3>
+        <table class="rs-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Boletos</th>
+                    <th>Total</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th>Números</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if ( empty( $purchases ) ) : ?>
                     <tr>
-                        <td><?php echo esc_html( $p->id ); ?></td>
-                        <td><?php echo esc_html( $p->buyer_name ); ?></td>
-                        <td><?php echo esc_html( $p->buyer_email ); ?></td>
-                        <td><?php echo esc_html( $p->quantity ); ?></td>
-                        <td>$<?php echo esc_html( number_format( $p->total_amount, 2 ) ); ?></td>
-                        <td><?php echo esc_html( ucfirst( $p->payment_status ) ); ?></td>
-                        <td><?php echo esc_html( date_i18n( 'd/m/Y H:i', strtotime( $p->purchase_date ) ) ); ?></td>
-                        <td><small><?php echo esc_html( implode( ', ', $formatted ) ); ?></small></td>
+                        <td colspan="8" class="rs-table-empty">
+                            <i class="fas fa-inbox"></i>
+                            No hay compras registradas.
+                        </td>
                     </tr>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </tbody>
-    </table>
+                <?php else : ?>
+                    <?php foreach ( $purchases as $p ) :
+                        $tickets = $wpdb->get_col( $wpdb->prepare(
+                            "SELECT ticket_number FROM {$wpdb->prefix}raffle_tickets WHERE purchase_id = %d ORDER BY ticket_number",
+                            $p->id
+                        ) );
+                        $formatted = array_map( function ( $n ) use ( $raffle ) {
+                            return Raffle_Tickets::format_ticket_number( $n, $raffle->total_tickets );
+                        }, $tickets );
+                    ?>
+                        <tr>
+                            <td><strong>#<?php echo esc_html( $p->id ); ?></strong></td>
+                            <td><?php echo esc_html( $p->buyer_name ); ?></td>
+                            <td><?php echo esc_html( $p->buyer_email ); ?></td>
+                            <td><?php echo esc_html( $p->quantity ); ?></td>
+                            <td><strong>$<?php echo esc_html( number_format( $p->total_amount, 0, ',', '.' ) ); ?></strong></td>
+                            <td>
+                                <span class="rs-badge rs-badge-<?php echo esc_attr( $p->payment_status ); ?>">
+                                    <?php echo esc_html( ucfirst( $p->payment_status ) ); ?>
+                                </span>
+                            </td>
+                            <td><?php echo esc_html( date_i18n( 'd/m/Y H:i', strtotime( $p->purchase_date ) ) ); ?></td>
+                            <td>
+                                <div class="rs-ticket-list">
+                                    <?php foreach ( $formatted as $num ) : ?>
+                                        <span class="rs-ticket-num"><?php echo esc_html( $num ); ?></span>
+                                    <?php endforeach; ?>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
 </div>

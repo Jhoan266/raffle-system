@@ -1,10 +1,14 @@
 <?php if ( ! defined( 'ABSPATH' ) ) exit; ?>
-<div class="wrap">
-    <h1>Configuración de Wompi</h1>
+<div class="wrap rs-wrap">
+    <div class="rs-page-header">
+        <h1 class="rs-page-title">
+            <i class="fas fa-credit-card"></i> Configuración de Wompi
+        </h1>
+    </div>
 
     <?php if ( isset( $_GET['message'] ) && $_GET['message'] === 'saved' ) : ?>
-        <div class="notice notice-success is-dismissible">
-            <p>Configuración guardada correctamente.</p>
+        <div class="rs-alert rs-alert-success">
+            <i class="fas fa-check-circle"></i> Configuración guardada correctamente.
         </div>
     <?php endif; ?>
 
@@ -12,77 +16,79 @@
         <?php wp_nonce_field( 'wompi_settings_save', 'wompi_nonce' ); ?>
         <input type="hidden" name="wompi_settings_submit" value="1">
 
-        <table class="form-table">
-            <tr>
-                <th scope="row">Habilitar Wompi</th>
-                <td>
-                    <label>
+        <div class="rs-card">
+            <h3 class="rs-card-title"><i class="fas fa-toggle-on"></i> General</h3>
+            <div class="rs-form-grid">
+                <div class="rs-form-group">
+                    <label class="rs-checkbox-label">
                         <input type="checkbox" name="wompi_enabled" value="1"
                             <?php checked( get_option( 'wompi_enabled', '0' ), '1' ); ?>>
-                        Activar pasarela de pago Wompi
+                        <div>
+                            <strong>Activar pasarela Wompi</strong>
+                            <span class="rs-help" style="display:block;">Habilita los pagos con Wompi en tu sitio.</span>
+                        </div>
                     </label>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">Modo Sandbox</th>
-                <td>
-                    <label>
+                </div>
+                <div class="rs-form-group">
+                    <label class="rs-checkbox-label">
                         <input type="checkbox" name="wompi_sandbox" value="1"
                             <?php checked( get_option( 'wompi_sandbox', '1' ), '1' ); ?>>
-                        Usar ambiente de pruebas (sandbox)
+                        <div>
+                            <strong>Modo Sandbox</strong>
+                            <span class="rs-help" style="display:block;">Desactiva esta opción cuando vayas a producción.</span>
+                        </div>
                     </label>
-                    <p class="description">Desactiva esta opción cuando vayas a producción.</p>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row"><label for="wompi_public_key">Llave Pública</label></th>
-                <td>
-                    <input type="text" id="wompi_public_key" name="wompi_public_key"
+                </div>
+            </div>
+        </div>
+
+        <div class="rs-card">
+            <h3 class="rs-card-title"><i class="fas fa-key"></i> Credenciales API</h3>
+            <div class="rs-form-grid">
+                <div class="rs-form-group">
+                    <label for="wompi_public_key" class="rs-label">Llave Pública</label>
+                    <input type="text" id="wompi_public_key" name="wompi_public_key" class="rs-input"
                            value="<?php echo esc_attr( get_option( 'wompi_public_key', '' ) ); ?>"
-                           class="regular-text" placeholder="pub_test_... o pub_prod_...">
-                    <p class="description">Se encuentra en tu panel de Wompi → Desarrolladores.</p>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row"><label for="wompi_private_key">Llave Privada</label></th>
-                <td>
-                    <input type="password" id="wompi_private_key" name="wompi_private_key"
+                           placeholder="pub_test_... o pub_prod_...">
+                    <p class="rs-help">Encuéntrala en Wompi → Desarrolladores.</p>
+                </div>
+                <div class="rs-form-group">
+                    <label for="wompi_private_key" class="rs-label">Llave Privada</label>
+                    <input type="password" id="wompi_private_key" name="wompi_private_key" class="rs-input"
                            value="<?php echo esc_attr( get_option( 'wompi_private_key', '' ) ); ?>"
-                           class="regular-text" placeholder="prv_test_... o prv_prod_...">
-                    <p class="description">Solo se usa en consultas servidor a servidor.</p>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row"><label for="wompi_integrity_secret">Secreto de Integridad</label></th>
-                <td>
-                    <input type="password" id="wompi_integrity_secret" name="wompi_integrity_secret"
+                           placeholder="prv_test_... o prv_prod_...">
+                    <p class="rs-help">Solo se usa en consultas servidor a servidor.</p>
+                </div>
+                <div class="rs-form-group">
+                    <label for="wompi_integrity_secret" class="rs-label">Secreto de Integridad</label>
+                    <input type="password" id="wompi_integrity_secret" name="wompi_integrity_secret" class="rs-input"
                            value="<?php echo esc_attr( get_option( 'wompi_integrity_secret', '' ) ); ?>"
-                           class="regular-text" placeholder="test_integrity_... o prod_integrity_...">
-                    <p class="description">Para firmar los pagos y evitar manipulación.</p>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row"><label for="wompi_events_secret">Secreto de Eventos</label></th>
-                <td>
-                    <input type="password" id="wompi_events_secret" name="wompi_events_secret"
+                           placeholder="test_integrity_... o prod_integrity_...">
+                    <p class="rs-help">Para firmar los pagos y evitar manipulación.</p>
+                </div>
+                <div class="rs-form-group">
+                    <label for="wompi_events_secret" class="rs-label">Secreto de Eventos</label>
+                    <input type="password" id="wompi_events_secret" name="wompi_events_secret" class="rs-input"
                            value="<?php echo esc_attr( get_option( 'wompi_events_secret', '' ) ); ?>"
-                           class="regular-text" placeholder="test_events_... o prod_events_...">
-                    <p class="description">Para verificar la firma de los webhooks.</p>
-                </td>
-            </tr>
-        </table>
+                           placeholder="test_events_... o prod_events_...">
+                    <p class="rs-help">Para verificar la firma de los webhooks.</p>
+                </div>
+            </div>
+        </div>
 
-        <h2>Información del Webhook</h2>
-        <table class="form-table">
-            <tr>
-                <th scope="row">URL del Webhook</th>
-                <td>
-                    <code><?php echo esc_html( rest_url( 'raffle-system/v1/wompi-webhook' ) ); ?></code>
-                    <p class="description">Configura esta URL en tu panel de Wompi → Desarrolladores → Eventos.</p>
-                </td>
-            </tr>
-        </table>
+        <div class="rs-card">
+            <h3 class="rs-card-title"><i class="fas fa-link"></i> Webhook</h3>
+            <div class="rs-form-group">
+                <label class="rs-label">URL del Webhook</label>
+                <div class="rs-webhook-url"><?php echo esc_html( rest_url( 'raffle-system/v1/wompi-webhook' ) ); ?></div>
+                <p class="rs-help">Configura esta URL en tu panel de Wompi → Desarrolladores → Eventos.</p>
+            </div>
+        </div>
 
-        <?php submit_button( 'Guardar Configuración' ); ?>
+        <div class="rs-form-actions">
+            <button type="submit" class="rs-btn rs-btn-primary rs-btn-lg">
+                <i class="fas fa-save"></i> Guardar Configuración
+            </button>
+        </div>
     </form>
 </div>
